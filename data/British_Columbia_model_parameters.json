@@ -1,0 +1,18 @@
+{
+    
+  "H_1": {
+        "value": 0.2,
+        "description": "Rate of transitioning from 𝐸1 to 𝐸2"
+    },
+
+    "H_2": {
+        "value": 1.0,
+        "description": "Rate of transitioning from 𝐸1 to I1"
+
+},
+
+    "gamma": {
+        "value": 0.2,
+        "description": "Infection recovery rate"
+    }
+}

@@ -50,3 +50,5 @@ class CMCreator:
 
         # Divide by the population to get the full symmetric contact matrix
         self.cm = new_sym_contact_mtx_transposed / self.pop
+
+

@@ -3,8 +3,8 @@ from src.static.dataloader import DataLoader
 
 
 def main():
-    data = DataLoader(model="moghadas")
-    runner = Runner(data=data, model="moghadas")
+    data = DataLoader(model="rost")
+    runner = Runner(data=data, model="rost")
     runner.run()
 
 

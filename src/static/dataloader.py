@@ -31,11 +31,27 @@ class DataLoader:
                 "model_parameters": "seir_model_parameters.json",
                 "contact_matrices": "seir_contact_matrices.xls",
                 "age_distribution": "seir_age_distribution.xls"
+            },
+            "italy": {
+                "model_parameters": "italy_model_parameters.json",
+                "contact_matrices": "italy_contact_matrices.xls",
+                "age_distribution": "italy_age_distribution.xls"
+            },
+            "kenya": {
+                "model_parameters": "kenya_model_parameters.json",
+                "contact_matrices": "kenya_contact_matrices.xls",
+                "age_distribution": "kenya_age_distribution.xls"
+            },
+            "british_columbia": {
+                "model_parameters": "British_Columbia_model_parameters.json",
+                "contact_matrices": "British_Columbia_contact_matrices.xls",
+                "age_distribution": "British_Columbia_age_distribution.xls"
             }
+
         }
 
         if self.model not in model_data_files:
-            raise ValueError(f"Country '{model}' is not supported.")
+            raise ValueError(f"model '{model}' is not supported.")
 
         # Set file paths for the selected country
         data_files = model_data_files[self.model]
@@ -79,7 +95,8 @@ class DataLoader:
     def _get_contact_mtx(self):
         wb = xlrd.open_workbook(self._contact_data_file)
         contact_matrices = {}
-        num_sheets = 2 if self.model in ["moghadas", "seir"] else 4
+        num_sheets = 1 if self.model == "british_columbia" else (
+            2 if self.model in ["moghadas", "seir", "italy"] else 4)
 
         for idx in range(num_sheets):
             sheet = wb.sheet_by_index(idx)

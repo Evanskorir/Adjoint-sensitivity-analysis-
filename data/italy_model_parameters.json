@@ -1,0 +1,47 @@
+{
+  "y_i": {
+        "value": [
+           0.1473718,
+           0.1473718,
+           0.07302868,
+           0.07302868,
+           0.2961226,
+           0.2961226,
+           0.4191036,
+           0.4191036,
+           0.4445867,
+           0.4445867,
+           0.563572,
+           0.563572,
+           0.8169443,
+           0.8169443,
+           0.750559
+        ],
+        "description": "Probability of Clinical fraction on infection"
+    },
+   
+    "d_e": {
+        "value": 0.3333,
+        "description": "Reciprocal of Incubation period (E to IP and E to IS; days)"
+    },
+
+    "d_p": {
+        "value": 0.4762,
+        "description": "Reciprocal of Duration of preclinical infectiousness (days)"
+    },
+
+    "d_c": {
+        "value": 0.3448,
+        "description": "Reciprocal of Duration of clinical infectiousness (IC to R; days)"
+    },
+    
+    "d_s": {
+        "value": 0.2,
+        "description": "Reciprocal of Duration of subclinical infectiousness (days)"
+    },
+   
+    "f": {
+        "value": 0.5,
+        "description": "Relative infectousness of Ip vs. Is"
+    }
+}

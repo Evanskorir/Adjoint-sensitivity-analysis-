@@ -1,14 +1,14 @@
 import torch
 
 from src.static.e_matrix_calculator import EMatrixCalculator
-from src.models.seir.v_matrix_calculator import VMatrixCalculator
+from src.models.british_columbia.v_matrix_calculator import VMatrixCalculator
 
 
 class NGMCalculator:
     def __init__(self, param: dict, n_age: int) -> None:
         self.ngm_small_tensor = None
         self.symmetric_contact_matrix = None
-        states = ["e", "i"]
+        states = ["e1", "e2", "i1", "i2"]
         self.states = states
         self.n_age = n_age
         self.parameters = param
@@ -23,12 +23,14 @@ class NGMCalculator:
     def _get_f(self, contact_mtx: torch.Tensor) -> torch.Tensor:
         i = self.i
         s_mtx = self.s_mtx
-        n_state = self.n_states
+        n_states = self.n_states
 
-        f = torch.zeros((self.n_age * self.n_states, self.n_age * self.n_states))
+        f = torch.zeros((self.n_age * n_states, self.n_age * n_states))
+
         susc_vec = self.parameters["susc"].reshape((-1, 1))
-        f[i["e"]:s_mtx:n_state, i["i"]:s_mtx:n_state] = contact_mtx.T * susc_vec
-        # f[i["i"]:s_mtx:n_state, i["i"]:s_mtx:n_state] = contact_mtx.T * susc_vec
+        f[i["e1"]:s_mtx:n_states, i["e2"]:s_mtx:n_states] = contact_mtx.T * susc_vec
+        f[i["e1"]:s_mtx:n_states, i["i1"]:s_mtx:n_states] = contact_mtx.T * susc_vec
+        f[i["e1"]:s_mtx:n_states, i["i2"]:s_mtx:n_states] = contact_mtx.T * susc_vec
 
         return f
 

@@ -29,7 +29,7 @@ class CGLeafPreparator:
         Returns: torch.Tensor: The full contact matrix.
         """
         contact_data = self.data.contact_data
-        if self.model in ["moghadas", "seir"]:
+        if self.model in ["moghadas", "seir", "italy", "british_columbia"]:
             full_orig_cm = self.data.contact_data["All"]
         else:
             full_orig_cm = (

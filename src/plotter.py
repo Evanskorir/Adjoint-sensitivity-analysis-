@@ -14,7 +14,7 @@ class Plotter:
     def __init__(self, data, n_age: int, model: str) -> None:
         self.data = data
         self.n_age = n_age
-        if model == "rost":
+        if model in ["rost", "kenya"]:
             self.labels = ["0-4", "5-9", "10-14", "15-19", "20-24",
                      "25-29", "30-34", "35-39", "40-44", "45-49", "50-54",
                      "55-59", "60-64", "65-69", "70-74", "75+"]
@@ -25,10 +25,13 @@ class Plotter:
             self.labels = ["0-4", "5-9", "10-14", "15-19", "20-24",
                      "25-29", "30-34", "35-39", "40-44", "45-49", "50-54",
                      "55-59", "60-64", "65-69", "70-74", "75-79", "80+"]
-        elif model == "seir":
+        elif model in ["seir", "italy"]:
             self.labels = ["0-4", "5-9", "10-14", "15-19", "20-24",
                      "25-29", "30-34", "35-39", "40-44", "45-49", "50-54",
                      "55-59", "60-64", "65-69", "70+"]
+        elif model == "british_columbia":
+            self.labels = ["<2", "2-5", "6-17", "18-24", "25-34",
+                     "35-44", "45-54", "55-64", "65-74", "75+"]
         else:
             raise Exception("Invalid model")
 
@@ -455,6 +458,8 @@ class Plotter:
         """
         # Ensure the folder exists
         os.makedirs(folder, exist_ok=True)
+        if isinstance(aggregated_matrix, torch.Tensor):
+            aggregated_matrix = aggregated_matrix.detach().cpu().numpy()
 
         # Ensure aggregated_matrix is 1D
         if aggregated_matrix.ndim > 1:

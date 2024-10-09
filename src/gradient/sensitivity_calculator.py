@@ -1,16 +1,21 @@
 from src.gradient.eigen_value_gradient import EigenValueGradient
 from src.comp_graph.cm_creator import CMCreator
-from src.comp_graph.cm_elements_cg_leaf import CMElementsCGLeaf
+# from src.comp_graph.cm_elements_cg_leaf import CMElementsCGLeaf
 from src.gradient.ngm_gradient import NGMGradient
 from src.static.cm_leaf_preparator import CGLeafPreparator
 from src.static.dataloader import DataLoader
 from src.static.eigen_calculator import EigenCalculator
+
+from src.nmf import ContactMatrixFactorizer
 
 # Import NGMCalculators from different models
 from src.models.chikina.ngm_calculator import NGMCalculator as ChikinaNGMCalculator
 from src.models.moghadas.ngm_calculator import NGMCalculator as MoghadasNGMCalculator
 from src.models.seir.ngm_calculator import NGMCalculator as SeirNGMCalculator
 from src.models.rost.ngm_calculator import NGMCalculator as RostNGMCalculator
+from src.models.italy.ngm_calculator import NGMCalculator as ItalyNGMCalculator
+from src.models.kenya.ngm_calculator import NGMCalculator as KenyaNGMCalculator
+from src.models.british_columbia.ngm_calculator import NGMCalculator as BCNGMCalculator
 
 
 class SensitivityCalculator:
@@ -23,13 +28,18 @@ class SensitivityCalculator:
         # Initialize variables to store calculated values
         self.ngm_calculator = None
         self.ngm_small_tensor = None
-        self.ngm_small_grads = None
-        self.eigen_value_gradient = None
         self.eigen_value = None
         self.eigen_vector = None
-        self.contact_input = None
+
         self.scale_value = None
         self.symmetric_contact_matrix = None
+
+        self.contact_input_136 = None
+        self.contact_input_16 = None
+        self.ngm_small_grads_136 = None
+        self.ngm_small_grads_16 = None
+        self.eigen_value_gradient_136 = None
+        self.eigen_value_gradient_16 = None
 
         self._select_ngm_calculator()
 
@@ -45,6 +55,12 @@ class SensitivityCalculator:
             self.ngm_calculator_class = SeirNGMCalculator
         elif self.model == "rost":
             self.ngm_calculator_class = RostNGMCalculator
+        elif self.model == "italy":
+            self.ngm_calculator_class = ItalyNGMCalculator
+        elif self.model == "kenya":
+            self.ngm_calculator_class = KenyaNGMCalculator
+        elif self.model == "british_columbia":
+            self.ngm_calculator_class = BCNGMCalculator
         else:
             raise ValueError(f"Unknown model: {self.model}")
 
@@ -53,7 +69,8 @@ class SensitivityCalculator:
         Main function to calculate sensitivity using various steps
         """
         # 1. Initialize NGM calculator with parameters
-        self.ngm_calculator = self.ngm_calculator_class(n_age=self.n_age, param=params)
+        self.ngm_calculator = self.ngm_calculator_class(n_age=self.n_age,
+                                                        param=params)
 
         # 2. Create leaf of the computation graph
         self._create_leaf(scale)
@@ -71,63 +88,83 @@ class SensitivityCalculator:
         # 6. Calculate eigenvalue and eigenvalue gradients for R0
         self._calculate_eigenvectors()
 
-    def _create_leaf(self, scale: str):
-        """
-        Create the computation graph leaf (CG leaf) from the original contact matrix
-        """
+    def _create_leaf(self, scale):
+        # Prepare the contact matrix data
         cg_leaf_preparator = CGLeafPreparator(data=self.data, model=self.model)
         cg_leaf_preparator.run()
         transformed_total_orig_cm = cg_leaf_preparator.transformed_total_orig_cm
 
-        cm_elements_cg_leaf = CMElementsCGLeaf(
-            n_age=self.n_age,
-            transformed_total_orig_cm=transformed_total_orig_cm,
-            pop=self.population
-        )
-        cm_elements_cg_leaf.run(scale=scale)
-        self.contact_input = cm_elements_cg_leaf.contact_input.requires_grad_(True)
-        self.scale_value = cm_elements_cg_leaf.scale_value
+        # Initialize NMF for the contact matrix
+        nmf = ContactMatrixFactorizer(n_components=1, pop=self.population,
+                                      n_age=self.n_age,
+                                      transformed_total_orig_cm=transformed_total_orig_cm)
+
+        # Run NMF to compute the matrices
+        nmf.run(scale)
+
+        # Retrieve contact inputs and set requires_grad=True
+        self.contact_input_16, self.contact_input_136 = nmf.get_contact_inputs()
+        self.contact_input_16.requires_grad_(True)
+        self.contact_input_136.requires_grad_(True)
+
+        # Store the scale value from the nmf instance
+        self.scale_value = nmf.scale_value
 
     def _contact_matrix_manipulation(self, scale: str):
-        """
-        Perform manipulations on the contact matrix to produce necessary inputs
-        """
-        cm_creator = CMCreator(
-            n_age=self.n_age,
-            pop=self.population.reshape((-1, 1))
-        )
-        cm_creator.run(
-            contact_matrix=self.contact_input,
-            scale_value=self.scale_value,
-            scale=scale
-        )
+        cm_creator = CMCreator(n_age=self.n_age,
+                               pop=self.population.reshape((-1, 1)))
+        cm_creator.run(contact_matrix=self.contact_input_136,
+                       scale_value=self.scale_value,
+                       scale=scale)
+
+        # Store the resulting symmetric contact matrix
         self.symmetric_contact_matrix = cm_creator.cm
 
     def _calculate_ngm_gradients(self):
-        """
-        Calculate the gradients of the next generation matrix (NGM)
-        """
         ngm_grad = NGMGradient(
             ngm_small_tensor=self.ngm_small_tensor,
-            contact_input=self.contact_input
+            contact_input_16=self.contact_input_16,
+            contact_input_136=self.contact_input_136
         )
+
         ngm_grad.run()
-        self.ngm_small_grads = ngm_grad.ngm_small_grads
+        self.ngm_small_grads_136 = ngm_grad.ngm_small_grads_136
+        self.ngm_small_grads_16 = ngm_grad.ngm_small_grads_16
 
     def _calculate_eigenvectors(self):
         """
         Calculate the dominant eigenvalue and eigenvector, and gradients
         """
-        eigen_calculator = EigenCalculator(ngm_small_tensor=self.ngm_small_tensor)
+        eigen_calculator = EigenCalculator(
+            ngm_small_tensor=self.ngm_small_tensor)
         eigen_calculator.run()
 
         self.eigen_vector = eigen_calculator.dominant_eig_vec
         self.eigen_value = eigen_calculator.dominant_eig_val
 
-        # Calculate eigenvalue gradient
-        eigen_value_grad = EigenValueGradient(
+        # Calculate the eigenvalue gradient for contact_input_16
+        eigen_value_grad_16 = EigenValueGradient(
             ngm_small_tensor=self.ngm_small_tensor,
             dominant_eig_vec=self.eigen_vector
         )
-        eigen_value_grad.run(ngm_small_grads=self.ngm_small_grads)
-        self.eigen_value_gradient = eigen_value_grad
+        # Run gradient calculation for the 16-sized input
+        eigen_value_grad_16.run(ngm_small_grads=self.ngm_small_grads_16)
+
+        # Store the result for 16-sized gradient
+        self.eigen_value_gradient_16 = eigen_value_grad_16
+
+        # Calculate the eigenvalue gradient for contact_input_136
+        eigen_value_grad_136 = EigenValueGradient(
+            ngm_small_tensor=self.ngm_small_tensor,
+            dominant_eig_vec=self.eigen_vector
+        )
+        # Run gradient calculation for the 136-sized input
+        eigen_value_grad_136.run(ngm_small_grads=self.ngm_small_grads_136)
+        self.eigen_value_gradient_136 = eigen_value_grad_136
+
+
+
+
+
+
+
