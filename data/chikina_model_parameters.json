@@ -1,0 +1,85 @@
+{
+    "xi": {
+        "value": [
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.063,
+            0.063,
+            0.122,
+            0.122,
+            0.274,
+            0.274,
+            0.432,
+            0.432,
+            0.709
+
+        ],
+        "description": "Probability of intensive care (given hospitalization)"
+    },
+    "gamma_d": {
+        "value": [
+            0.00002,
+            0.00002,
+            0.00006,
+            0.00006,
+            0.0003,
+            0.0003,
+            0.0008,
+            0.0008,
+            0.0015,
+            0.0015,
+            0.006,
+            0.006,
+            0.022,
+            0.022,
+            0.051,
+            0.051,
+            0.093
+        ],
+        "description": "Probability of fatal outcome for each age group"
+    },
+
+    "h": {
+        "value": [
+            0.001,
+            0.001,
+            0.003,
+            0.003,
+            0.012,
+            0.012,
+            0.032,
+            0.032,
+            0.049,
+            0.049,
+            0.102,
+            0.102,
+            0.166,
+            0.166,
+            0.243,
+            0.243,
+            0.273
+        ],
+        "description": "Probability of hospitalization"
+    },
+
+    "alpha_p": {
+        "value": 0.25,
+        "description": "Reciprocal of pre-critical-care population"
+    },
+
+    "alpha_c": {
+        "value": 0.1,
+        "description": "Reciprocal of critical-care period"
+    },
+
+    "alpha_i": {
+        "value": 0.07142857142857142,
+        "description": "Reciprocal of recovery time from I"
+    }
+}

@@ -1,0 +1,72 @@
+{
+      "beta_i": {
+        "value": 3.99e-8,
+        "description": "Transmission coefficient"
+    },
+     "q": {
+        "value": 1.43,
+        "description": "param that controls the amplitude"
+    },
+     "t_offset": {
+        "value": -101,
+        "description": "Offset in days – for seasonality sine wave"
+    },
+    "omega_v": {
+        "value":  0.000456621,
+        "description": "Mean duration of vaccine induced immunity"
+    },
+     "omega_i": {
+        "value": 0.000456621,
+        "description": "Mean duration of natural immunity"
+    },
+    "mu_i": {
+        "value": [
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+            0.000,
+          0.000,
+            0.00010958904,
+            0.00010958904
+        ],
+        "description": "The natural death rate"
+    },
+     "psi_i": {
+        "value": [
+            0.1,
+            0.1,
+            0.1,
+            0.1,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+            0.5,
+            0.5,
+            0.5
+        ],
+        "description": "age dependent vaccination rate"
+    },
+     "rho": {
+        "value": 0.5,
+        "description": "Mean duration of infectiousness"
+    },
+    "gamma": {
+        "value": 0.5,
+        "description": "Mean duration of latency"
+    }
+}

@@ -6,7 +6,7 @@ from src.static.dataloader import DataLoader
 
 
 class Runner:
-    def __init__(self, data: DataLoader):
+    def __init__(self, data: DataLoader, model: str):
         """
         Initialize the simulation with the provided data.
         Args: data (DataLoader): DataLoader object containing age data and model params.
@@ -16,8 +16,9 @@ class Runner:
         self.population = self.data.age_data
         self.n_age = len(self.data.age_data)
         self.params = self.data.model_parameters_data
+        self.model = model
 
-        self.sensitivity_calc = SensitivityCalculator(data=self.data)
+        self.sensitivity_calc = SensitivityCalculator(data=self.data, model=self.model)
         self.r0_cm_grad = None
 
         # User-defined parameters
@@ -25,9 +26,6 @@ class Runner:
         self.r0_choices = [1.2, 1.8, 2.5]
         # self.scales = ["pop_sum", "contact_sum", "no_scale"]
         self.scales = ["pop_sum", "contact_sum"]
-
-        # Initialize PCA for gradients
-        self.svd = None
 
     def run(self):
         """
@@ -87,7 +85,7 @@ class Runner:
             scale_folder (str): Path to the folder where plots will be saved.
             base_r0 (float): Base R0 value used for the simulation.
         """
-        plot = Plotter(data=self.data, n_age=self.n_age)
+        plot = Plotter(data=self.data, n_age=self.n_age, model=self.model)
 
         # Plot contact matrices
         plot.plot_contact_matrices(contact_data=self.data.contact_data,
@@ -111,9 +109,8 @@ class Runner:
 
         # Define matrices to be plotted with specific axis-labeling instructions
         matrices = [
-            (self.sensitivity_calc.ngm_small_tensor, r"$\mathcal{NGM}$", "ngm_heatmap.pdf", True),
-            (self.sensitivity_calc.symmetric_contact_matrix,
-             r"$\mathbf{Symmetrized\ Full\ Contact\ Matrix}$", "CM.pdf", False),
+            (self.sensitivity_calc.ngm_small_tensor, None, "ngm_heatmap.pdf", True),
+            (self.sensitivity_calc.symmetric_contact_matrix, None, "CM.pdf", False),
             (plot.reconstruct_plot_symmetric_grad_matrix(self.r0_cm_grad), "Gradient values",
              "Grads.pdf", True)
         ]
@@ -134,13 +131,5 @@ class Runner:
         plot.get_percentage_age_group_contact_list(
             symmetrized_cont_matrix=self.sensitivity_calc.symmetric_contact_matrix,
             filename="age_group_percentage_bar_plot",
-            folder=scale_folder
-        )
-
-        # plot agg based on pca
-        plot.plot_aggregated_bar_chart(
-            aggregated_matrix=self.svd,
-            plot_title=f"$\\overline{{\\mathcal{{R}}}}_0={base_r0}$",
-            filename="agg",
             folder=scale_folder
         )

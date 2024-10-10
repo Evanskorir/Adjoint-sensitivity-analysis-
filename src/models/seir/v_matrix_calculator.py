@@ -1,0 +1,29 @@
+import torch
+
+
+class VMatrixCalculator:
+    def __init__(self, param: dict, n_states: int, n_age: int, states) -> None:
+        self.n_states = n_states
+        self.states = states
+        self.n_age = n_age
+        self.parameters = param
+
+        self.i = {self.states[index]: index for index in range(0, self.n_states)}
+
+        self._get_v()
+
+    def _idx(self, state: str) -> torch.Tensor:
+        return torch.arange(self.n_age * self.n_states) % self.n_states == self.i[state]
+
+    def _get_v(self):
+        idx = self._idx
+        v = torch.zeros((self.n_age * self.n_states, self.n_age * self.n_states))
+        # e -> e
+        v[idx("e"), idx("e")] = self.parameters["gamma"]
+        # e -> i
+        v[idx("i"), idx("e")] = -self.parameters["gamma"]
+        # i -> i
+        v[idx("i"), idx("i")] = self.parameters["rho"]
+
+        self.v_inv = torch.linalg.inv(v)
+

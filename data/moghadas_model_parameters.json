@@ -1,0 +1,131 @@
+{
+    "k": {
+        "value":
+            0.5,
+        "description": "Relative infectivity of mild illness compared to severe and critical illness"
+    },
+
+"sigma": {
+        "value":
+    0.1923076923,
+        "description": "Average duration of incubation period"
+    },
+
+"theta": {
+        "value": [
+            0.8,
+            0.8,
+            0.4,
+            0.2
+        ],
+        "description": "Proportion of cases that exhibit mild symptoms"
+    },
+
+"q": {
+        "value":
+            0.05,
+        "description": "Proportion of severe symptomatic cases who practice self-isolation upon symptom onset"
+    },
+
+"f_i": {
+        "value":
+            0.8,
+        "description": "Weight for self-isolation after symptom onset for severe and critical cases"
+    },
+
+"f_a": {
+        "value":
+            0.1,
+
+        "description": "Weight for self-isolation after symptom onset for mild cases"
+    },
+
+"tau_i": {
+        "value":
+            1,
+
+        "description": "Average time from symptom onset to self- isolation for severe and critical cases"
+    },
+
+"tau_a": {
+        "value":
+            1.5,
+        "description":"Average time from symptom onset to self- isolation for mild cases"
+    },
+
+"delta": {
+        "value":
+            0.4,
+        "description": "Average time from symptom onset to hospitalization"
+    },
+
+  "gamma": {
+        "value":
+            0.217391,
+        "description": "Average time from symptom onset to recovery"
+    },
+
+"h": {
+        "value": [
+            0.025,
+            0.32,
+            0.32,
+            0.64
+        ],
+        "description": "Proportion of symptomatic patients with severe and critical illness requiring hospital care or ICU"
+
+    },
+
+"c": {
+        "value": [
+            0.014,
+            0.042,
+            0.075,
+            0.15
+        ],
+        "description": "Proportion of hospitalized cases requiring ICU"
+    },
+
+
+"p_m": {
+        "value":
+            0.235,
+        "description": "Proportion of hospitalized cases that die"
+    },
+
+"mu_h": {
+        "value":
+            0.1030927835,
+        "description": "Time from hospitalization (non-ICU) admission to death"
+    },
+
+"psi_h": {
+        "value":
+            0.1,
+        "description": "Length of hospital stay before recovery"
+    },
+
+"m_h": {
+        "value":
+            0.2296,
+        "description": "Weight associated with the model death rate among hospitalized (non-ICU) patients"
+    },
+
+"mu_c": {
+        "value":
+            0.1428571429,
+        "description": "Time from ICU admission to death"
+    },
+
+"psi_c": {
+        "value":
+            0.0754716981,
+        "description": "Length of ICU stay before recovery"
+    },
+
+"m_c": {
+        "value":
+            0.1396,
+        "description": "Weight associated with the model death rate among ICU patients"
+    }
+}
