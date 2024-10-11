@@ -14,9 +14,7 @@ class Plotter:
     def __init__(self, data, n_age: int) -> None:
         self.data = data
         self.n_age = n_age
-        self.labels = ["0-4", "5-9", "10-14", "15-19", "20-24", "25-29",
-                       "30-34", "35-39", "40-44", "45-49", "50-54", "55-59",
-                       "60-64", "65-69", "70-74", "75+"]
+        self.labels = data.labels
 
         # create data matrix
         self.create_matrix = np.zeros((self.n_age, self.n_age)) * np.nan
@@ -317,9 +315,6 @@ class Plotter:
         # Invert y-axis for correct orientation
         ax.invert_yaxis()
 
-        # Add gridlines for better readability
-        ax.grid(which='major', color='gray', linestyle='--', linewidth=0.5)
-
         # Adjust layout to avoid overlap
         plt.tight_layout()
 
@@ -429,77 +424,5 @@ class Plotter:
 
         # Save the figure
         save_path = os.path.join(folder, f"{filename}.pdf")
-        plt.savefig(save_path, format='pdf', bbox_inches='tight')
-        plt.close()
-
-    def plot_aggregated_bar_chart(self, aggregated_matrix: np.ndarray,
-                                  plot_title: str, filename: str, folder: str):
-        """
-        Plot a bar chart of the aggregated matrix for 16 age groups,
-        using a gradient color mapping based on aggregated gradient values.
-        :param aggregated_matrix: A 1D numpy array of aggregated values for the age groups.
-        :param plot_title: Title of the plot.
-        :param filename: Filename to save the plot.
-        :param folder: Folder to save the plot.
-        """
-        # Ensure the folder exists
-        os.makedirs(folder, exist_ok=True)
-
-        # Ensure aggregated_matrix is 1D
-        if aggregated_matrix.ndim > 1:
-            aggregated_matrix = aggregated_matrix.flatten()
-
-        # Define color mapping based on aggregated gradient values
-        norm = plt.Normalize(aggregated_matrix.min(), aggregated_matrix.max())
-        cmap = plt.get_cmap('Greens')  # Use a green colormap
-        colors = [cmap(norm(val)) for val in aggregated_matrix]
-
-        fig, ax = plt.subplots(figsize=(8, 8))
-        # ax.set_facecolor('#e9f5e9')  # Set a light green background for contrast
-        ax.tick_params(axis='both', direction="in", which='both', length=6)
-
-        # Define x positions
-        x_pos = np.arange(len(self.labels))
-
-        # Plot bars with shadow effect
-        bars = ax.bar(x_pos, aggregated_matrix, align='center', width=0.7,
-                      alpha=0.9, color=colors, edgecolor='black', linewidth=1.2)
-
-        # Add shadow effect to bars
-        for bar in bars:
-            bar.set_zorder(2)  # Set bar on top of the grid
-            bar.set_edgecolor('black')  # Dark edge for better contrast
-            bar.set_linewidth(1.5)
-
-        # Add grid lines for better readability
-        ax.yaxis.grid(True, linestyle='--', alpha=0.7, color='gray')
-        ax.xaxis.grid(False)  # No grid for the x-axis
-
-        # Define a formatter function for the y-axis
-        def format_y_ticks(value, tick_number):
-            return f'{value:.2f}'
-
-        # Apply the formatter to the y-axis
-        ax.yaxis.set_major_formatter(FuncFormatter(format_y_ticks))
-
-        # Customize x-axis and y-axis
-        ax.set_xticks(x_pos)
-        ax.set_xticklabels(self.labels, rotation=45, ha='center', fontsize=12,
-                           fontweight='bold')
-        ax.set_xlabel('Age Groups', fontsize=14, labelpad=10, fontweight='bold')
-
-        # Add a title
-        ax.set_title(plot_title, fontsize=18, pad=20, fontweight='bold',
-                     color='darkgreen')
-
-        # Add borders to the plot
-        for spine in ax.spines.values():
-            spine.set_visible(True)
-            spine.set_color('darkgreen')
-            spine.set_linewidth(2)
-
-        # Save the figure
-        save_path = os.path.join(folder, f"{filename}.pdf")
-        plt.tight_layout()
         plt.savefig(save_path, format='pdf', bbox_inches='tight')
         plt.close()

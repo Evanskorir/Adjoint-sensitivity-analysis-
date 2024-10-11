@@ -27,3 +27,4 @@ pandas~=2.1.4
 seaborn~=0.13.2
 sklearn~=0.0
 scikit-learn~=1.4.2
+gdown~=5.2.0

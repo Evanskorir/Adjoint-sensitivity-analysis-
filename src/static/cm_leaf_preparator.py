@@ -4,12 +4,13 @@ from src.static.dataloader import DataLoader
 
 
 class CGLeafPreparator:
-    def __init__(self, data: DataLoader):
+    def __init__(self, data: DataLoader, model: str):
         """
         Initialize the class with data.
         Args: data: An instance of DataLoader containing contact and age data.
         """
         self.data = data
+        self.model = model
         self.transformed_total_orig_cm = None
 
     def run(self):
@@ -28,12 +29,16 @@ class CGLeafPreparator:
         Returns: torch.Tensor: The full contact matrix.
         """
         contact_data = self.data.contact_data
-        full_orig_cm = (
-            contact_data["Home"] +
-            contact_data["School"] +
-            contact_data["Work"] +
-            contact_data["Other"]
-        )
+        if self.model in ["moghadas", "seir", "italy", "british_columbia"]:
+            full_orig_cm = self.data.contact_data["All"]
+        else:
+            full_orig_cm = (
+                    contact_data["Home"] +
+                    contact_data["School"] +
+                    contact_data["Work"] +
+                    contact_data["Other"]
+            )
+
         return full_orig_cm
 
     def _transform_orig_total_cm(self, contact_matrix: torch.Tensor) -> torch.Tensor:
