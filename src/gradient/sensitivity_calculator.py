@@ -1,18 +1,27 @@
 from src.gradient.eigen_value_gradient import EigenValueGradient
 from src.comp_graph.cm_creator import CMCreator
 from src.comp_graph.cm_elements_cg_leaf import CMElementsCGLeaf
-from src.comp_graph.ngm_calculator import NGMCalculator
 from src.gradient.ngm_gradient import NGMGradient
 from src.static.cm_leaf_preparator import CGLeafPreparator
 from src.static.dataloader import DataLoader
 from src.static.eigen_calculator import EigenCalculator
 
+# Import NGMCalculators from different models
+from src.models.chikina.ngm_calculator import NGMCalculator as ChikinaNGMCalculator
+from src.models.moghadas.ngm_calculator import NGMCalculator as MoghadasNGMCalculator
+from src.models.seir.ngm_calculator import NGMCalculator as SeirNGMCalculator
+from src.models.rost.ngm_calculator import NGMCalculator as RostNGMCalculator
+from src.models.italy.ngm_calculator import NGMCalculator as ItalyNGMCalculator
+from src.models.kenya.ngm_calculator import NGMCalculator as KenyaNGMCalculator
+from src.models.british_columbia.ngm_calculator import NGMCalculator as BCNGMCalculator
+
 
 class SensitivityCalculator:
-    def __init__(self, data: DataLoader):
+    def __init__(self, data: DataLoader, model: str):
         self.data = data
         self.population = self.data.age_data
         self.n_age = len(self.data.age_data)
+        self.model = model
 
         # Initialize variables to store calculated values
         self.ngm_calculator = None
@@ -25,12 +34,35 @@ class SensitivityCalculator:
         self.scale_value = None
         self.symmetric_contact_matrix = None
 
+        self._select_ngm_calculator()
+
+    def _select_ngm_calculator(self):
+        """
+        Select the appropriate NGMCalculator based on the model name
+        """
+        if self.model == "chikina":
+            self.ngm_calculator_class = ChikinaNGMCalculator
+        elif self.model == "moghadas":
+            self.ngm_calculator_class = MoghadasNGMCalculator
+        elif self.model == "seir":
+            self.ngm_calculator_class = SeirNGMCalculator
+        elif self.model == "rost":
+            self.ngm_calculator_class = RostNGMCalculator
+        elif self.model == "italy":
+            self.ngm_calculator_class = ItalyNGMCalculator
+        elif self.model == "kenya":
+            self.ngm_calculator_class = KenyaNGMCalculator
+        elif self.model == "british_columbia":
+            self.ngm_calculator_class = BCNGMCalculator
+        else:
+            raise ValueError(f"Unknown model: {self.model}")
+
     def run(self, scale: str, params: dict):
         """
         Main function to calculate sensitivity using various steps
         """
         # 1. Initialize NGM calculator with parameters
-        self.ngm_calculator = NGMCalculator(n_age=self.n_age, param=params)
+        self.ngm_calculator = self.ngm_calculator_class(n_age=self.n_age, param=params)
 
         # 2. Create leaf of the computation graph
         self._create_leaf(scale)
@@ -52,7 +84,7 @@ class SensitivityCalculator:
         """
         Create the computation graph leaf (CG leaf) from the original contact matrix
         """
-        cg_leaf_preparator = CGLeafPreparator(data=self.data)
+        cg_leaf_preparator = CGLeafPreparator(data=self.data, model=self.model)
         cg_leaf_preparator.run()
         transformed_total_orig_cm = cg_leaf_preparator.transformed_total_orig_cm
 
@@ -108,3 +140,9 @@ class SensitivityCalculator:
         )
         eigen_value_grad.run(ngm_small_grads=self.ngm_small_grads)
         self.eigen_value_gradient = eigen_value_grad
+
+
+
+
+
+

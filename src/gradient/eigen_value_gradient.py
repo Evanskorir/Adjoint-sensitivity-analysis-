@@ -20,3 +20,4 @@ class EigenValueGradient:
         # get the eig_vec_transpose
         eig_vec_transpose = self.dominant_eig_vec.T
         self.eig_val_cm_grad = torch.matmul(eig_vec_transpose, a_dot_x)
+

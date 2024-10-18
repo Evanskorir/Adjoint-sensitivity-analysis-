@@ -6,7 +6,7 @@ from src.static.dataloader import DataLoader
 
 
 class Runner:
-    def __init__(self, data: DataLoader):
+    def __init__(self, data: DataLoader, model: str):
         """
         Initialize the simulation with the provided data.
         Args: data (DataLoader): DataLoader object containing age data and model params.
@@ -16,18 +16,17 @@ class Runner:
         self.population = self.data.age_data
         self.n_age = len(self.data.age_data)
         self.params = self.data.model_parameters_data
+        self.model = model
+        self.labels = self.data.labels
 
-        self.sensitivity_calc = SensitivityCalculator(data=self.data)
+        self.sensitivity_calc = SensitivityCalculator(data=self.data, model=self.model)
         self.r0_cm_grad = None
 
         # User-defined parameters
         self.susc_choices = [0.5, 1.0]
         self.r0_choices = [1.2, 1.8, 2.5]
         # self.scales = ["pop_sum", "contact_sum", "no_scale"]
-        self.scales = ["pop_sum", "contact_sum"]
-
-        # Initialize PCA for gradients
-        self.svd = None
+        self.scales = ["pop_sum"]
 
     def run(self):
         """
@@ -57,7 +56,7 @@ class Runner:
             self.calculate_projected_gradients(base_r0=base_r0)
 
             # Create folder structure for saving plots
-            folder = f"generated/results_base_r0_{base_r0:.1f}_susc_{susc:.1f}"
+            folder = f"generated/{self.model}/results_base_r0_{base_r0:.1f}_susc_{susc:.1f}"
             os.makedirs(folder, exist_ok=True)
 
             # Create subfolder for each scale
@@ -65,7 +64,7 @@ class Runner:
             os.makedirs(scale_folder, exist_ok=True)
 
             # Generate plots for contact input, gradients, NGM matrix, etc.
-            self.generate_plots(scale_folder=scale_folder, base_r0=base_r0)
+            self.generate_plots(scale_folder=scale_folder, susc=susc, base_r0=base_r0)
 
     def calculate_projected_gradients(self, base_r0: float):
         """
@@ -79,26 +78,68 @@ class Runner:
         # Scale the eigenvalue gradient by beta to get r0_cm_grad
         self.r0_cm_grad = beta * self.sensitivity_calc.eigen_value_gradient.eig_val_cm_grad
 
-    def generate_plots(self, scale_folder: str, base_r0: float):
+    def generate_plots(self, scale_folder: str, susc: float, base_r0: float):
         """
         Generate various plots such as contact matrix, gradients, NGM matrix, etc.,
         and save them in the specified folder.
         Args:
             scale_folder (str): Path to the folder where plots will be saved.
-            base_r0 (float): Base R0 value used for the simulation.
+            susc (float): susc value used for the simulation.
+            base_r0 (float): R0 value used for the simulation.
         """
         plot = Plotter(data=self.data, n_age=self.n_age)
 
+        # Create a model folder for saving specific plots under model, not scale_folder
+        model_folder = f"generated/{self.model}"
+        os.makedirs(model_folder, exist_ok=True)
+
         # Plot contact matrices
-        plot.plot_contact_matrices(contact_data=self.data.contact_data,
+        plot.plot_contact_matrices(contact_data=self.data.contact_data, model=self.model,
                                    filename="contact_matrices")
 
-        # Plot contact input matrix
+        # Plot contact input matrix and save it under the model folder only (not in scale folder)
+        contact_input_folder = os.path.join(model_folder, "contact_input")
+        os.makedirs(contact_input_folder, exist_ok=True)
         plot.plot_contact_input(
             contact_input=self.sensitivity_calc.contact_input,
             plot_title="",
             filename="contact_input.pdf",
-            folder=scale_folder
+            folder=contact_input_folder
+        )
+
+        # Generate and plot the percentage age group contribution bar plot under model folder
+        bar_plot_folder = os.path.join(model_folder, "age_group_bar")
+        os.makedirs(bar_plot_folder, exist_ok=True)
+        plot.get_percentage_age_group_contact_list(
+            symmetrized_cont_matrix=self.sensitivity_calc.symmetric_contact_matrix,
+            filename="age_group_percentage_bar_plot.pdf",
+            folder=bar_plot_folder
+        )
+
+        # Generate and plot the symmetric contact matrix under the model folder
+        cm_folder = os.path.join(model_folder, "CM")
+        os.makedirs(cm_folder, exist_ok=True)
+        plot.plot_small_ngm_contact_grad_mtx(
+            matrix=self.sensitivity_calc.symmetric_contact_matrix,
+            filename="CM.pdf",
+            plot_title="",
+            folder=cm_folder,
+            label_axes=False,
+            show_colorbar=True
+        )
+
+        # Plot the NGM matrix twice, once for susc=0.5 and once for susc=1.0
+        ngm_folder = os.path.join(model_folder, "NGM")
+        os.makedirs(ngm_folder, exist_ok=True)
+
+        # Plot for the current susc value, distinguished by the susc in the filename
+        plot.plot_small_ngm_contact_grad_mtx(
+            matrix=self.sensitivity_calc.ngm_small_tensor,
+            filename=f"ngm_heatmap_susc_{susc}.pdf",
+            plot_title=f"NGM for susc={susc}",
+            folder=ngm_folder,
+            label_axes=True,
+            show_colorbar=True
         )
 
         # Plot R0 gradient matrix
@@ -109,38 +150,5 @@ class Runner:
             folder=scale_folder
         )
 
-        # Define matrices to be plotted with specific axis-labeling instructions
-        matrices = [
-            (self.sensitivity_calc.ngm_small_tensor, r"$\mathcal{NGM}$", "ngm_heatmap.pdf", True),
-            (self.sensitivity_calc.symmetric_contact_matrix,
-             r"$\mathbf{Symmetrized\ Full\ Contact\ Matrix}$", "CM.pdf", False),
-            (plot.reconstruct_plot_symmetric_grad_matrix(self.r0_cm_grad), "Gradient values",
-             "Grads.pdf", True)
-        ]
 
-        # Plot each matrix and save in the folder
-        for matrix, plot_title, filename, label_axes in matrices:
-            show_colorbar = True  # Always show color bar
-            plot.plot_small_ngm_contact_grad_mtx(
-                matrix=matrix,
-                plot_title=plot_title,
-                filename=filename,
-                folder=scale_folder,
-                label_axes=label_axes,
-                show_colorbar=show_colorbar  # Always pass True to show the color bar
-            )
 
-        # Generate and plot the percentage age group contribution bar plot
-        plot.get_percentage_age_group_contact_list(
-            symmetrized_cont_matrix=self.sensitivity_calc.symmetric_contact_matrix,
-            filename="age_group_percentage_bar_plot",
-            folder=scale_folder
-        )
-
-        # plot agg based on pca
-        plot.plot_aggregated_bar_chart(
-            aggregated_matrix=self.svd,
-            plot_title=f"$\\overline{{\\mathcal{{R}}}}_0={base_r0}$",
-            filename="agg",
-            folder=scale_folder
-        )
